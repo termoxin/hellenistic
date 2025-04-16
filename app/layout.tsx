@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { IndexedDBProvider } from '@/components/IndexedDBProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hellenistic - Greek Learning Companion',
-  description: 'A Next.js application for learning Greek language',
+  title: 'Greek-English Learning App',
+  description: 'Learn Greek with videos and translations',
 };
 
 export default function RootLayout({
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -24,7 +25,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          {children}
+          <IndexedDBProvider>
+            {children}
+          </IndexedDBProvider>
         </ThemeProvider>
       </body>
     </html>

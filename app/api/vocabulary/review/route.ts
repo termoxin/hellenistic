@@ -1,40 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VocabularyItem } from '@/types';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Path to the vocabulary file
-const vocabFilePath = path.join(process.cwd(), 'public', 'data', 'vocabulary.json');
-
-// Helper function to read vocabulary data
-async function readVocabularyData(): Promise<VocabularyItem[]> {
-  try {
-    // Create data directory if it doesn't exist
-    try {
-      await fs.mkdir(path.join(process.cwd(), 'public', 'data'), { recursive: true });
-    } catch (error) {
-      console.error('Error creating data directory:', error);
-    }
-    
-    const data = await fs.readFile(vocabFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    // Return empty array if file doesn't exist
-    return [];
-  }
-}
-
-// Helper function to save vocabulary data
-async function saveVocabularyData(data: VocabularyItem[]): Promise<void> {
-  // Create data directory if it doesn't exist
-  try {
-    await fs.mkdir(path.join(process.cwd(), 'public', 'data'), { recursive: true });
-  } catch (error) {
-    console.error('Error creating data directory:', error);
-  }
-  
-  await fs.writeFile(vocabFilePath, JSON.stringify(data, null, 2));
-}
 
 // POST to update a vocabulary item's review status
 export async function POST(request: NextRequest) {
@@ -45,29 +10,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing vocabulary item ID' }, { status: 400 });
     }
     
-    // Read existing vocabulary items
-    const vocabularyItems = await readVocabularyData();
-    
-    // Find the item to update
-    const itemIndex = vocabularyItems.findIndex(item => item.id === id);
-    
-    if (itemIndex === -1) {
-      return NextResponse.json({ error: 'Vocabulary item not found' }, { status: 404 });
-    }
-    
-    // Update the item
-    vocabularyItems[itemIndex] = {
-      ...vocabularyItems[itemIndex],
-      reviewCount: reviewCount !== undefined ? reviewCount : vocabularyItems[itemIndex].reviewCount,
+    // Indicate this needs to be handled on the client side with IndexedDB
+    return NextResponse.json({
+      clientStorage: true,
+      id,
+      reviewCount,
       lastReviewed: lastReviewed || new Date().toISOString()
-    };
-    
-    await saveVocabularyData(vocabularyItems);
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Vocabulary item updated',
-      item: vocabularyItems[itemIndex]
     });
   } catch (error) {
     console.error('Error updating vocabulary item:', error);

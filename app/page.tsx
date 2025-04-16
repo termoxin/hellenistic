@@ -11,6 +11,7 @@ import Settings from '@/components/Settings';
 import LocalMediaForm from '@/components/LocalMediaForm';
 import StudyMode from '@/components/StudyMode';
 import { VideoInfo, Subtitle, TranslationResult, VocabularyItem, AppSettings } from '@/types';
+import { useIndexedDB } from '@/components/IndexedDBProvider';
 
 export default function Home() {
   // App state
@@ -29,24 +30,25 @@ export default function Home() {
   const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false);
   const [isTranslationLoading, setIsTranslationLoading] = useState<boolean>(false);
   const [currentOriginalText, setCurrentOriginalText] = useState<string>('');
-  const [vocabularyItems, setVocabularyItems] = useState<VocabularyItem[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; visible: boolean }>({
     message: '',
     type: 'info',
     visible: false
   });
 
-  // Fetch vocabulary and bookmarks on mount, and load saved settings
+  // Get vocabulary from IndexedDB context instead of state
+  const { 
+    vocabularyItems, 
+    addVocabularyItem, 
+    removeVocabularyItem, 
+    updateVocabularyItem,
+    isLoading: isVocabularyLoading 
+  } = useIndexedDB();
+
+  // Fetch settings on mount (no need to fetch vocabulary anymore)
   useEffect(() => {
-    const fetchData = async () => {
+    const loadSettings = async () => {
       try {
-        // Fetch vocabulary
-        const vocabResponse = await fetch('/api/vocabulary');
-        if (vocabResponse.ok) {
-          const vocabData = await vocabResponse.json();
-          setVocabularyItems(vocabData);
-        }
-        
         // Load saved settings from localStorage
         const savedSettings = localStorage.getItem('appSettings');
         if (savedSettings) {
@@ -60,11 +62,11 @@ export default function Home() {
           });
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error loading settings:', error);
       }
     };
     
-    fetchData();
+    loadSettings();
   }, []);
 
   // Handle tab switching
@@ -147,7 +149,7 @@ export default function Home() {
     showToast('Settings saved successfully', 'success');
   };
 
-  // Handle saving a word/phrase to vocabulary
+  // Handle saving a word/phrase to vocabulary - updated to use IndexedDB
   const saveToVocabulary = async () => {
     if (!translationData) return;
     
@@ -160,65 +162,33 @@ export default function Home() {
         videoId: videoInfo?.videoId,
       };
       
-      const response = await fetch('/api/vocabulary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(vocabItem),
-      });
+      const newItem = await addVocabularyItem(vocabItem);
       
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Update local state
-        if (data.success) {
-          if (data.message === 'Vocabulary added') {
-            setVocabularyItems([...vocabularyItems, data.item]);
-          } else {
-            // Update existing item
-            setVocabularyItems(
-              vocabularyItems.map(item => 
-                item.id === data.item.id ? data.item : item
-              )
-            );
-          }
-          
-          showToast('Saved to vocabulary', 'success');
-          setIsTooltipVisible(false);
-        }
-      } else {
-        showToast('Failed to save to vocabulary', 'error');
-      }
+      showToast('Saved to vocabulary', 'success');
+      setIsTooltipVisible(false);
     } catch (error) {
       console.error('Error saving to vocabulary:', error);
       showToast('Failed to save to vocabulary', 'error');
     }
   };
 
-  // Delete a vocabulary item
+  // Delete a vocabulary item - updated to use IndexedDB
   const deleteVocabularyItem = async (id: string) => {
     try {
-      const response = await fetch('/api/vocabulary', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-      
-      if (response.ok) {
-        setVocabularyItems(vocabularyItems.filter(item => item.id !== id));
-        showToast('Vocabulary item deleted', 'success');
-      } else {
-        showToast('Failed to delete vocabulary item', 'error');
-      }
+      await removeVocabularyItem(id);
+      showToast('Vocabulary item deleted', 'success');
     } catch (error) {
       console.error('Error deleting vocabulary item:', error);
       showToast('Failed to delete vocabulary item', 'error');
     }
   };
 
-  // Edit a vocabulary item
+  // Edit a vocabulary item - updated to use IndexedDB
   const editVocabularyItem = (item: VocabularyItem) => {
     // In a real implementation, would open a modal or form to edit the item
     console.log('Edit item:', item);
+    // When actually implementing the edit:
+    // await updateVocabularyItem(editedItem);
   };
 
   // Helper to show toast notifications
@@ -231,39 +201,26 @@ export default function Home() {
     }, 3000);
   };
 
-  // Add function to update vocabulary item after study review
+  // Update vocabulary item after review - updated to use IndexedDB
   const updateVocabularyItemAfterReview = async (item: VocabularyItem) => {
     try {
-      const response = await fetch('/api/vocabulary/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: item.id,
-          reviewCount: item.reviewCount,
-          lastReviewed: item.lastReviewed
-        }),
+      const updatedItem = await updateVocabularyItem({
+        ...item,
+        reviewCount: item.reviewCount,
+        lastReviewed: item.lastReviewed || new Date().toISOString()
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Update the item in local state
-        if (data.success) {
-          setVocabularyItems(
-            vocabularyItems.map(vocabItem => 
-              vocabItem.id === data.item.id ? data.item : vocabItem
-            )
-          );
-          
-          showToast('Progress saved', 'success');
-        }
-      } else {
-        showToast('Failed to update progress', 'error');
-      }
+      showToast('Progress saved', 'success');
     } catch (error) {
       console.error('Error updating vocabulary item:', error);
       showToast('Failed to update progress', 'error');
     }
+  };
+
+  // Handle clear translation data
+  const clearTranslationData = () => {
+    setTranslationData(null);
+    setIsTooltipVisible(false);
   };
 
   return (
@@ -378,7 +335,7 @@ export default function Home() {
         isVisible={isTooltipVisible}
         data={translationData}
         position={tooltipPosition}
-        onClose={() => setIsTooltipVisible(false)}
+        onClose={clearTranslationData}
         onSaveToVocabulary={saveToVocabulary}
         isLoading={isTranslationLoading}
         originalText={currentOriginalText}
