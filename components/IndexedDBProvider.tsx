@@ -23,10 +23,22 @@ interface IndexedDBContextType {
   removeVocabularyItem: (id: string) => Promise<void>;
   updateReviewStatus: (id: string, reviewCount?: number, lastReviewed?: string) => Promise<VocabularyItem | null>;
   initialized: boolean;
+  getStudyItems: () => StudyData;
 }
 
 // Create the context
 const IndexedDBContext = createContext<IndexedDBContextType | undefined>(undefined);
+
+// Add this interface to define study data
+interface StudyData {
+  totalItems: number;
+  dueItems: number;
+  masteredItems: number;
+  studyItems: (VocabularyItem & { 
+    dueDate: Date | null;
+    isDue: boolean;
+  })[];
+}
 
 // Create the provider component
 export const IndexedDBProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -182,6 +194,62 @@ export const IndexedDBProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
+  // Add this function to the provider component
+  const getStudyItems = (): StudyData => {
+    // Calculate due dates and sort by priority
+    const now = new Date();
+    const itemsWithDueDate = vocabularyItems.map(item => {
+      // Calculate next review date based on last review and review count
+      let dueDate: Date | null = null;
+      
+      if (item.lastReviewed) {
+        const lastReviewed = new Date(item.lastReviewed);
+        dueDate = new Date(lastReviewed);
+        
+        // Spaced repetition intervals in days (1, 3, 7, 14, 30, 90, 180)
+        const intervals = [1, 3, 7, 14, 30, 90, 180];
+        const interval = intervals[Math.min(item.reviewCount || 0, intervals.length - 1)];
+        
+        dueDate.setDate(dueDate.getDate() + interval);
+      }
+      
+      return {
+        ...item,
+        dueDate,
+        isDue: dueDate ? dueDate <= now : true // Never-reviewed words are always due
+      };
+    });
+    
+    // Sort items by priority
+    const sortedItems = [...itemsWithDueDate].sort((a, b) => {
+      // Priority 1: Due items first
+      if (a.isDue && !b.isDue) return -1;
+      if (!a.isDue && b.isDue) return 1;
+      
+      // Priority 2: Never reviewed items
+      if (a.reviewCount === 0 && b.reviewCount !== 0) return -1;
+      if (a.reviewCount !== 0 && b.reviewCount === 0) return 1;
+      
+      // Priority 3: Sort by due date (earliest first)
+      if (a.dueDate && b.dueDate) {
+        return a.dueDate.getTime() - b.dueDate.getTime();
+      }
+      
+      // Priority 4: Sort by date added (oldest first)
+      return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
+    });
+    
+    // Calculate daily limit
+    const dailyLimit = Math.min(20, Math.max(5, Math.ceil(sortedItems.length / 5)));
+    
+    return {
+      totalItems: vocabularyItems.length,
+      dueItems: sortedItems.filter(item => item.isDue).length,
+      masteredItems: vocabularyItems.filter(item => (item.reviewCount || 0) >= 5).length,
+      studyItems: sortedItems.slice(0, dailyLimit)
+    };
+  };
+
   // Create the context value
   const contextValue: IndexedDBContextType = {
     vocabularyItems,
@@ -191,7 +259,8 @@ export const IndexedDBProvider: React.FC<{ children: ReactNode }> = ({ children 
     updateVocabularyItem,
     removeVocabularyItem,
     updateReviewStatus,
-    initialized
+    initialized,
+    getStudyItems
   };
 
   return (

@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { VocabularyItem } from '@/types';
+import { useIndexedDB } from '@/components/IndexedDBProvider';
 
 interface StudyModeProps {
   items: VocabularyItem[];
@@ -15,58 +18,20 @@ export default function StudyMode({ items, onUpdateItem }: StudyModeProps) {
   const [studyItems, setStudyItems] = useState<VocabularyItem[]>([]);
   const [studyCompleted, setStudyCompleted] = useState<boolean>(false);
   const [stats, setStats] = useState({ total: 0, studied: 0, mastered: 0 });
+  
+  // Get the getStudyItems function from the IndexedDB context
+  const { getStudyItems } = useIndexedDB();
 
   useEffect(() => {
-    // Sort items by priority for study
-    const sortedItems = [...items].sort((a, b) => {
-      // First priority: items never reviewed (reviewCount === 0)
-      if (a.reviewCount === 0 && b.reviewCount !== 0) return -1;
-      if (a.reviewCount !== 0 && b.reviewCount === 0) return 1;
-      
-      // If both have been reviewed, prioritize by due date
-      if (a.lastReviewed && b.lastReviewed) {
-        const aDate = new Date(a.lastReviewed);
-        const bDate = new Date(b.lastReviewed);
-        
-        // Calculate due dates based on interval
-        const aInterval = INTERVALS[Math.min(a.reviewCount, INTERVALS.length - 1)];
-        const bInterval = INTERVALS[Math.min(b.reviewCount, INTERVALS.length - 1)];
-        
-        const aDueDate = new Date(aDate);
-        aDueDate.setDate(aDueDate.getDate() + aInterval);
-        
-        const bDueDate = new Date(bDate);
-        bDueDate.setDate(bDueDate.getDate() + bInterval);
-        
-        // If one is overdue and one isn't, prioritize the overdue one
-        const now = new Date();
-        if (aDueDate <= now && bDueDate > now) return -1;
-        if (aDueDate > now && bDueDate <= now) return 1;
-        
-        // Otherwise sort by due date (oldest first)
-        return aDueDate.getTime() - bDueDate.getTime();
-      }
-      
-      // If only one has been reviewed, prioritize the unreviewed one
-      if (!a.lastReviewed && b.lastReviewed) return -1;
-      if (a.lastReviewed && !b.lastReviewed) return 1;
-      
-      // Default: sort by date added (oldest first)
-      return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
-    });
-    
-    // Limit to 10-20 items for daily study
-    const dailyLimit = Math.min(15, Math.max(sortedItems.length, 5));
-    setStudyItems(sortedItems.slice(0, dailyLimit));
-    
-    // Calculate stats
-    const mastered = items.filter(item => item.reviewCount >= 5).length;
+    // Use the getStudyItems function to get optimized study items
+    const studyData = getStudyItems();
+    setStudyItems(studyData.studyItems);
     setStats({
-      total: items.length,
-      studied: items.filter(item => item.reviewCount > 0).length,
-      mastered
+      total: studyData.totalItems,
+      studied: studyData.totalItems - (studyData.dueItems - studyData.studyItems.length),
+      mastered: studyData.masteredItems
     });
-  }, [items]);
+  }, [items, getStudyItems]);
 
   const handleResponse = (quality: number) => {
     if (currentIndex >= studyItems.length) return;
