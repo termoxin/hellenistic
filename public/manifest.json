@@ -1,0 +1,19 @@
+{
+  "name": "Hellestenic",
+  "short_name": "Hellestenic",
+  "description": "Learn Greek with videos and translations",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3F51B5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "form_factor": "wide",
+      "purpose": "any maskable"
+    }
+  ]
+} 
