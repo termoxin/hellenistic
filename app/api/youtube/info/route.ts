@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ytdl from 'ytdl-core';
 
+interface VideoInfo {
+  videoId: string;
+  thumbnails: { url: string }[];
+  title?: string;
+  formats?: any[];
+  videoLoadingDisabled?: boolean;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -19,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get basic video info first
-    const basicInfo = {
+    const basicInfo: VideoInfo = {
       videoId: videoID,
       thumbnails: [
         { url: `https://img.youtube.com/vi/${videoID}/maxresdefault.jpg` },
