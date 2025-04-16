@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light theme default colors */
+  --background-start: #f5f7fa;
+  --background-end: #e4e9f7;
+  --text-primary: #1e293b;
+  --text-secondary: #334155;
+  --accent-primary: #4f46e5;
+  --accent-secondary: #818cf8;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(79, 70, 229, 0.5);
+  --input-bg: rgba(255, 255, 255, 0.5);
+  --input-border: rgba(203, 213, 225, 0.5);
+  --tooltip-bg: rgba(255, 255, 255, 0.9);
+  --tooltip-text: #334155;
+  --hover-highlight: rgba(99, 102, 241, 0.2);
+}
+
+.dark-theme {
+  --background-start: #111827;
+  --background-end: #1e1b4b;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --accent-primary: #4f46e5;
+  --accent-secondary: #818cf8;
+  --card-bg: rgba(15, 23, 42, 0.6);
+  --card-border: rgba(79, 70, 229, 0.5);
+  --input-bg: rgba(30, 41, 59, 0.5);
+  --input-border: rgba(51, 65, 85, 0.5);
+  --tooltip-bg: rgba(15, 23, 42, 0.9);
+  --tooltip-text: #e2e8f0;
+  --hover-highlight: rgba(99, 102, 241, 0.7);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(120deg, var(--background-start), var(--background-end));
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.gradient-bg {
+  background: linear-gradient(120deg, #4338ca, #3b82f6);
+}
+
+.card {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Toast notification animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Flag wave animation */
+@keyframes wave {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1px) rotate(0.5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.toast-slide-in {
+  animation: slideIn 0.5s forwards;
+}
+
+.toast-slide-out {
+  animation: slideOut 0.3s forwards;
+}
+
+#video-container { 
+  position: relative; 
+  max-width: 900px; 
+  margin: 1.5rem auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+video { 
+  width: 100%; 
+  display: block; 
+  background-color: #000;
+}
+
+.subtitle { 
+  position: absolute; 
+  bottom: 60px; 
+  width: 100%; 
+  text-align: center; 
+  font-size: 1.5rem; 
+  background: rgba(0,0,0,0.7); 
+  padding: 14px; 
+  cursor: pointer;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+/* Tooltip styles */
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  background-color: var(--tooltip-bg);
+  color: var(--tooltip-text);
+}
+
+.tooltip.visible {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Word hover effect */
+.word {
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.word:hover {
+  background-color: var(--hover-highlight);
+  transform: translateY(-2px);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(79, 70, 229, 0.3);
+  overflow: hidden;
+}
+
+.progress-bar .fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transition: width 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(55, 65, 81, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.8);
+} 
