@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { TranslationResult } from '@/types';
 
 interface TranslationTooltipProps {
@@ -35,9 +36,10 @@ export default function TranslationTooltip({
     left: `${position.x}px`,
     top: `${position.y}px`,
     maxWidth: '320px',
-    zIndex: 100,
+    zIndex: 10000, // Very high z-index to ensure it's on top of everything
     transform: 'translate(-50%, -100%)',
     marginTop: '-10px',
+    position: 'fixed',
   };
   
   // Adjust position based on screen edges
@@ -48,6 +50,7 @@ export default function TranslationTooltip({
     if (!tooltipElement) return;
     
     const rect = tooltipElement.getBoundingClientRect();
+    const isFullscreen = document.fullscreenElement !== null;
     
     // Check if tooltip is outside viewport and adjust
     let newTransform = 'translate(-50%, -100%)';
@@ -63,9 +66,15 @@ export default function TranslationTooltip({
     // Apply new styles
     tooltipElement.style.transform = newTransform;
     tooltipElement.style.marginTop = marginTopValue;
+    
+    // Ensure tooltip is visible in fullscreen mode
+    if (isFullscreen) {
+      tooltipElement.style.zIndex = '10000';
+    }
   }, [isVisible, position]);
 
-  return (
+  // Create the tooltip content
+  const tooltipContent = (
     <div 
       className="tooltip visible fixed p-5 bg-indigo-900/90 rounded-xl shadow-xl border border-indigo-700/70 backdrop-blur-sm"
       style={tooltipStyle}
@@ -147,5 +156,12 @@ export default function TranslationTooltip({
         </div>
       )}
     </div>
+  );
+
+  // Use React Portal to render the tooltip directly in the document body
+  // This ensures it's outside the video container and won't be affected by fullscreen mode
+  return ReactDOM.createPortal(
+    tooltipContent,
+    document.body
   );
 } 

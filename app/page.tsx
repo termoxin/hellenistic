@@ -110,7 +110,18 @@ export default function Home() {
       if (event) {
         const rect = (event.target as HTMLElement).getBoundingClientRect();
         xPos = rect.left + (rect.width / 2);
-        yPos = rect.top; // Position above the element
+        
+        // Check if in fullscreen mode
+        const isFullscreen = document.fullscreenElement !== null;
+        
+        if (isFullscreen) {
+          // In fullscreen, position it higher above the subtitle
+          // since we're likely dealing with bigger video dimensions
+          yPos = rect.top - 40;
+        } else {
+          // Regular positioning for windowed mode
+          yPos = rect.top;
+        }
       }
       
       // Set tooltip position
@@ -224,7 +235,7 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-8xl mx-auto p-6">
       <Header />
       
       {/* Main navigation tabs */}

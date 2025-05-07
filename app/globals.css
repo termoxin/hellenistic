@@ -99,12 +99,67 @@ body {
 }
 
 #video-container { 
+  display: flex;
+  flex-direction: column;
   position: relative; 
-  max-width: 900px; 
+  max-width: 1300px; 
   margin: 1.5rem auto;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Style for fullscreen mode */
+#video-container:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make video and iframe take full size in fullscreen */
+#video-container:fullscreen video,
+#video-container:fullscreen iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Hide native controls in fullscreen mode */
+#video-container:fullscreen video::-webkit-media-controls {
+  display: none !important;
+}
+
+#video-container:fullscreen video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+#video-container:fullscreen video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+/* Firefox specific fullscreen styling */
+#video-container:-moz-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Hide controls in Firefox */
+#video-container:-moz-full-screen video::-moz-media-controls {
+  display: none !important;
+}
+
+/* WebKit specific fullscreen styling */
+#video-container:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  border-radius: 0;
 }
 
 video { 
@@ -113,9 +168,15 @@ video {
   background-color: #000;
 }
 
+.subtitle-container {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .subtitle { 
-  position: absolute; 
-  bottom: 60px; 
+  position: relative; 
   width: 100%; 
   text-align: center; 
   font-size: 1.5rem; 
@@ -126,6 +187,65 @@ video {
   font-weight: 500;
   backdrop-filter: blur(4px);
   transition: all 0.3s ease;
+  pointer-events: auto;
+  z-index: 20;
+  margin-bottom: 4px;
+}
+
+.subtitle:hover {
+  background: rgba(0,0,0,0.85);
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  transform: scale(1.01);
+}
+
+.subtitle-greek {
+  color: #4ade80; /* Tailwind green-400 */
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+}
+
+.subtitle-english {
+  color: #ffffff;
+  border-radius: 0 0 8px 8px;
+  margin-bottom: 0;
+}
+
+/* For fullscreen subtitles */
+#video-container:fullscreen .subtitle-container {
+  bottom: 40px !important;
+}
+
+/* Hide YouTube controls in fullscreen */
+#video-container:fullscreen iframe {
+  border: 0;
+}
+
+/* Ensure YouTube iframe has transparent background in fullscreen */
+#video-container:fullscreen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: black;
+  z-index: -1;
+}
+
+/* Prevent any native controls from showing in fullscreen */
+#video-container:fullscreen .ytp-chrome-bottom,
+#video-container:fullscreen .ytp-chrome-top {
+  display: none !important;
+}
+
+/* Firefox specific */
+#video-container:-moz-full-screen .subtitle-container {
+  bottom: 40px !important;
+}
+
+/* WebKit specific */
+#video-container:-webkit-full-screen .subtitle-container {
+  bottom: 40px !important;
 }
 
 /* Tooltip styles */
@@ -142,9 +262,12 @@ video {
 }
 
 .tooltip.visible {
-  visibility: visible;
-  opacity: 1;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10000 !important; /* Ensure it's always on top */
   transform: translateY(0);
+  /* Make sure it appears above fullscreen video */
+  position: fixed !important;
 }
 
 /* Word hover effect */
@@ -153,11 +276,14 @@ video {
   border-radius: 6px;
   display: inline-block;
   margin: 0 2px;
+  position: relative;
 }
 
 .word:hover {
-  background-color: var(--hover-highlight);
+  background-color: rgba(74, 222, 128, 0.3); /* Green with transparency */
   transform: translateY(-2px);
+  text-decoration: underline;
+  text-decoration-color: #4ade80;
 }
 
 /* Progress bar */

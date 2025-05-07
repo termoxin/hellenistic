@@ -29,9 +29,13 @@ export default function SubtitleDisplay({
     onClick(text, event);
   };
 
+  if (!isActive || !text) {
+    return null;
+  }
+
   return (
     <div 
-      className={`subtitle ${!isActive ? 'opacity-0' : ''} ${className}`}
+      className={`subtitle ${className} ${!isActive ? 'opacity-0' : 'opacity-100'}`}
       onClick={handleSubtitleClick}
     >
       {words.map((word, index) => (
