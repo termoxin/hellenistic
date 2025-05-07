@@ -522,14 +522,14 @@ export default function VideoPlayer({
       <div 
         onMouseEnter={handleSubtitleMouseEnter}
         onMouseLeave={handleSubtitleMouseLeave}
-        className="subtitle-container absolute bottom-8 left-0 right-0 z-30 pointer-events-auto"
+        className="subtitle-container absolute bottom-[120px] left-0 right-0 z-30 pointer-events-auto"
       >
         {/* Greek subtitle */}
         <SubtitleDisplay
           text={currentSubtitle}
           isActive={!!currentSubtitle}
           onClick={onSubtitleClick}
-          className="subtitle-greek text-green-400 font-semibold text-center mb-2"
+          className="subtitle-greek text-green-400 font-semibold text-center"
         />
         
         {/* English subtitle */}
@@ -538,7 +538,7 @@ export default function VideoPlayer({
             text={translatedSubtitle}
             isActive={!!translatedSubtitle}
             onClick={(_text, _event) => {}}
-            className="subtitle-english text-white text-base text-center mb-8"
+            className="subtitle-english text-white text-base text-center"
           />
         )}
       </div>

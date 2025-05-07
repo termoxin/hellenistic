@@ -189,7 +189,6 @@ video {
   transition: all 0.3s ease;
   pointer-events: auto;
   z-index: 20;
-  margin-bottom: 4px;
 }
 
 .subtitle:hover {
